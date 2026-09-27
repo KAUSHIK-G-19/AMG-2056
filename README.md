@@ -149,7 +149,7 @@ pip install streamlit plotly numpy pandas
 
 ### Run Locally
 ```bash
-git clone https://github.com/<your-username>/AMG-2056.git
+git clone https://github.com/KAUSHIK-G-19/AMG-2056.git
 cd AMG-2056
 pip install -r requirements.txt
 streamlit run app.py
