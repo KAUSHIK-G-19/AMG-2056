@@ -1,0 +1,13 @@
+[theme]
+# Use light as base so Streamlit native widgets (labels, radio, toggles, sliders)
+# show dark text on light backgrounds by default.
+# Our custom CSS in app.py handles the full dark/light token switching on top.
+base = "light"
+primaryColor = "#0D6EFD"
+backgroundColor = "#EBF0F7"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1A2B3C"
+font = "sans serif"
+
+[server]
+headless = true
