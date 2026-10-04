@@ -9,7 +9,7 @@
 
 The **Autonomous Micro-Grid Governor (AMG-2056)** is an interactive operational dashboard prototype for a decentralised feeder-level energy management unit. It simulates the monitoring and autonomous control of a 100 kVA neighbourhood distribution transformer that serves residential and small commercial loads supplied in part by rooftop photovoltaic generation and a community Battery Energy Storage System (BESS).
 
-The system is designed to operate fully **offline and edge-first**, maintaining grid stability and voltage regulation without a continuous SCADA uplink. When the substation radio link is lost, the embedded Hamiltonian Neural Network governor assumes full autonomous droop control.
+The dashboard is a **self-contained simulation prototype**. It generates synthetic feeder, solar, load, and battery values for demonstration and does not require physical hardware or a SCADA connection. The radio toggle and autonomous-control states are simulated.
 
 ---
 
@@ -17,13 +17,13 @@ The system is designed to operate fully **offline and edge-first**, maintaining 
 
 Modern low-voltage distribution feeders are increasingly subject to **bidirectional power flow**, **solar intermittency**, and **unexpected demand surges** (community events, EV charging clusters). Traditional centralised SCADA systems cannot respond fast enough at the feeder edge, particularly under communication blackouts.
 
-AMG-2056 addresses this by embedding a lightweight **Physics-Informed Neural Network (PINN)** for 5-minute-horizon load and solar forecasting, combined with a **Hamiltonian Neural Network (HNN)** that enforces the system's energy conservation law as a hard physical constraint:
+This project illustrates PINN and HNN concepts through simulated forecasts, dispatch states, and energy-invariant metrics. It does **not** train or run neural-network models, connect to real sensors, or guarantee physical grid stability. The following equation describes the concept represented by the dashboard:
 
 ```
 dH/dt = (∂H/∂q)·q̇ + (∂H/∂p)·ṗ = 0   [Symplectic Invariant]
 ```
 
-This ensures the neural governor never dispatches a control action that violates energy balance — a property that standard neural networks cannot guarantee.
+The dashboard's values are demonstration data, not the output of a validated grid controller.
 
 ---
 
@@ -88,7 +88,12 @@ This ensures the neural governor never dispatches a control action that violates
 ### 4. Micro-Controller Autonomous Event Stream
 - Scrollable live terminal feed showing timestamped HNN governor decisions, BESS dispatch events, solar intermittency warnings, and manual override alerts
 
-### 5. Control Sidebar
+### 5. Optional Prototype Panels
+- **3D Hardware Prototype** — interactive schematic component layout, GPIO connection traces, and a file-upload control for STL, OBJ, or STEP files. Uploaded models are not rendered by the current app.
+- **Hardware Connections** — ESP32 pin-mapping reference for the voltage/current sensors, relays, and NRF24L01 module
+- **Maintenance & Fixes** — calibration guidance, team practices, common faults, and suggested remedies
+
+### 6. Control Sidebar
 | Control | Function |
 |---------|----------|
 | **Dark / Light Theme** | SCADA night-shift dark mode or daylight engineering light mode |
@@ -97,6 +102,7 @@ This ensures the neural governor never dispatches a control action that violates
 | **Manual Override** | Force BESS discharge + non-critical load shedding |
 | **Step / Reset** | Single-tick simulation advance or full state reset |
 | **Live Auto-Run** | Configurable 2–10 s auto-refresh for real-time simulation |
+| **Panel Navigator** | Show or hide the 3D prototype, hardware connections, and maintenance panels |
 
 ---
 
@@ -133,8 +139,8 @@ This ensures the neural governor never dispatches a control action that violates
 | **Dashboard** | Python 3.10+ · Streamlit |
 | **Visualisation** | Plotly Graph Objects · Plotly Subplots |
 | **Simulation Engine** | NumPy · Pandas |
-| **Physics Models** | Hamiltonian Mechanics · PINN loss formulation |
-| **Styling** | Vanilla CSS · Google Fonts (Roboto / Roboto Mono) |
+| **Simulation** | Synthetic data and PINN/HNN-inspired metrics; no model training |
+| **Styling** | Theme-aware CSS · Google Fonts (Barlow, JetBrains Mono) |
 | **Theme** | Dark SCADA / Light Engineering — toggle at runtime |
 
 ---
@@ -142,20 +148,35 @@ This ensures the neural governor never dispatches a control action that violates
 ## Installation & Running
 
 ### Prerequisites
-```bash
-Python >= 3.10
-pip install streamlit plotly numpy pandas
-```
+- Python 3.10 or newer
+- Git (optional, for cloning)
 
 ### Run Locally
+Clone the repository, then create an isolated environment and install every dependency from `requirements.txt`.
+
+**Windows PowerShell**
+```powershell
+git clone https://github.com/KAUSHIK-G-19/AMG-2056.git
+cd AMG-2056
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
+**macOS / Linux**
 ```bash
 git clone https://github.com/KAUSHIK-G-19/AMG-2056.git
 cd AMG-2056
-pip install -r requirements.txt
-streamlit run app.py
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
-Open your browser at **http://localhost:8501**
+Streamlit prints the local URL when the server starts (typically **http://localhost:8501**). Stop the server with `Ctrl+C`.
 
 ---
 
@@ -165,7 +186,7 @@ Open your browser at **http://localhost:8501**
 AMG-2056/
 ├── app.py                  # Main dashboard application
 ├── requirements.txt        # Python dependencies
-├── README.md               # System documentation & engineering specification
+├── README.md               # Project overview, limitations, and run instructions
 ├── LICENSE                 # MIT License
 └── .streamlit/
     └── config.toml         # Streamlit theme configuration
@@ -176,25 +197,25 @@ AMG-2056/
 ## Key Engineering Concepts
 
 ### Physics-Informed Neural Network (PINN)
-The forecasting engine incorporates the physical constraint that net power balance must be maintained:
+The demo presents the physical balance as a conceptual constraint:
 
 ```
 P_solar(t) + P_BESS(t) = P_load(t) + P_losses(t)
 ```
 
-The PINN loss function penalises predictions that violate this constraint, in addition to standard data-fit loss (MSE).
+The app visualizes synthetic forecast and loss curves; it does not train a PINN or calculate this loss from model predictions.
 
 ### Hamiltonian Neural Network (HNN) Dispatch
-The dispatch controller uses a Hamiltonian formulation where the system state `(q, p)` represents generalised coordinates (voltage phasors) and momenta (reactive power flows). The Hamiltonian:
+The dashboard uses a Hamiltonian formulation for explanatory context. The state `(q, p)` and Hamiltonian below are illustrative and are not connected to a physical grid solver:
 
 ```
 H(q, p) = T(p) + V(q)   →   dH/dt = 0 (conservative system)
 ```
 
-guarantees that every dispatch decision preserves system energy balance. The `|dH/dt|` metric on the dashboard is the real-time health indicator — values below 0.0025 pu indicate a stable, converged system.
+The displayed `|dH/dt|` value is simulated and should not be treated as a safety or convergence guarantee.
 
 ### Autonomous Islanded Operation
-When the SCADA radio link is offline, the governor transitions to **autonomous droop mode**: voltage and frequency regulation are handled entirely at the edge node using the HNN dispatch engine, without any upstream communication.
+When the simulated SCADA radio link is switched off, the dashboard displays an islanded/autonomous status. No actual voltage or frequency regulation occurs.
 
 ---
 
